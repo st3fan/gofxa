@@ -254,7 +254,7 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New(res.Status) // TODO: Proper errors based on what the server returns
+		return "", errors.New(res.Status) // TODO: Proper errors based on what the server returns
 	}
 
 	return string(body), nil
