@@ -58,6 +58,10 @@ type SignCertificateRequest struct {
 	Duration  uint64       `json:"duration"`
 }
 
+type SignCertificateResponse struct {
+	Certificate string `json:"cert"`
+}
+
 func NewClient(email, password string) (*Client, error) {
 	authPW, err := deriveAuthPWFromQuickStretchedPassword(quickStretchPassword(email, password))
 	if err != nil {
@@ -191,12 +195,13 @@ func (c *Client) FetchKeys() error {
 	for i := 0; i < 64; i++ {
 		t1[i] = ct[i] ^ accountKeys.XORKey[i]
 	}
-
 	c.KeyA = t1[0:32]
 
+	wrapKB := t1[32:64]
+
 	var t2 [32]byte
-	for i := 0; i < len(t2); i++ {
-		t2[i] = c.unwrapBKey[i] ^ t1[32+i]
+	for i := 0; i < 32; i++ {
+		t2[i] = c.unwrapBKey[i] ^ wrapKB[i]
 	}
 	c.KeyB = t2[:]
 
@@ -257,7 +262,12 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 		return "", errors.New(res.Status) // TODO: Proper errors based on what the server returns
 	}
 
-	return string(body), nil
+	signResponse := &SignCertificateResponse{}
+	if err = json.Unmarshal(body, signResponse); err != nil {
+		return "", err
+	}
+
+	return signResponse.Certificate, nil
 }
 
 func (c *Client) String() string {

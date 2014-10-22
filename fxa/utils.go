@@ -22,14 +22,11 @@ func deriveAuthPWFromQuickStretchedPassword(stretchedPassword []byte) ([]byte, e
 
 func deriveUnwrapBKeyFromQuickStretchedPassword(stretchedPassword []byte) ([]byte, error) {
 	secret := make([]byte, sha256.Size)
-	if _, err := io.ReadFull(hkdf.New(sha256.New, stretchedPassword, nil, []byte("identity.mozilla.com/picl/v1/unwrapBKey")), secret); err != nil {
+	if _, err := io.ReadFull(hkdf.New(sha256.New, stretchedPassword, nil, []byte("identity.mozilla.com/picl/v1/unwrapBkey")), secret); err != nil {
 		return nil, err
 	}
 	return secret, nil
 }
-
-//func deriveResponseKeys() ([]byte, []byte) {
-//}
 
 type RequestCredentials struct {
 	TokenId        []byte
