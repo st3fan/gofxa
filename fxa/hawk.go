@@ -10,9 +10,11 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
+	"net"
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,16 +23,27 @@ type HawkCredentials struct {
 	key []byte
 }
 
-// TODO: Breaks with custom ports
-func portForURL(u *url.URL) int {
-	if u.Scheme == "http" {
-		return 80
+func portForURL(u *url.URL) (int, error) {
+	if strings.LastIndex(u.Host, ":") == -1 {
+		if u.Scheme == "http" {
+			return 80, nil
+		} else {
+			return 443, nil
+		}
 	} else {
-		return 443
+		_, port, err := net.SplitHostPort(u.Host)
+		if err != nil {
+			return 0, err
+		}
+		return strconv.Atoi(port)
 	}
 }
 
 func hawkSignature(req *http.Request, payloadHash string, key []byte, ts time.Time, nonce string, ext string) (string, error) {
+	port, err := portForURL(req.URL)
+	if err != nil {
+		return "", err
+	}
 	mac := hmac.New(sha256.New, key)
 	io.WriteString(mac, "hawk.1.header\n")
 	io.WriteString(mac, strconv.FormatInt(ts.Unix(), 10)+"\n")
@@ -38,7 +51,7 @@ func hawkSignature(req *http.Request, payloadHash string, key []byte, ts time.Ti
 	io.WriteString(mac, req.Method+"\n")
 	io.WriteString(mac, req.URL.RequestURI()+"\n")
 	io.WriteString(mac, req.URL.Host+"\n") // TODO: Breaks with custom ports
-	io.WriteString(mac, strconv.Itoa(portForURL(req.URL))+"\n")
+	io.WriteString(mac, strconv.Itoa(port)+"\n")
 	io.WriteString(mac, payloadHash+"\n")
 	io.WriteString(mac, ext+"\n")
 	return base64.StdEncoding.EncodeToString(mac.Sum(nil)), nil
