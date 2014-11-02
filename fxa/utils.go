@@ -32,35 +32,35 @@ func deriveUnwrapBKeyFromQuickStretchedPassword(stretchedPassword []byte) ([]byt
 	return secret, nil
 }
 
-type RequestCredentials struct {
+type requestCredentials struct {
 	TokenId        []byte
 	RequestHMACKey []byte
 	RequestKey     []byte
 }
 
-func NewRequestCredentials(token []byte, name string) (*RequestCredentials, error) {
+func newRequestCredentials(token []byte, name string) (*requestCredentials, error) {
 	secret := make([]byte, 3*sha256.Size)
 	if _, err := io.ReadFull(hkdf.New(sha256.New, token, nil, []byte("identity.mozilla.com/picl/v1/"+name)), secret); err != nil {
 		return nil, err
 	}
-	return &RequestCredentials{
+	return &requestCredentials{
 		TokenId:        secret[0:32],
 		RequestHMACKey: secret[32:64],
 		RequestKey:     secret[64:96],
 	}, nil
 }
 
-type AccountKeys struct {
+type accountKeys struct {
 	HMACKey []byte
 	XORKey  []byte
 }
 
-func NewAccountKeys(requestKey []byte) (*AccountKeys, error) {
+func newAccountKeys(requestKey []byte) (*accountKeys, error) {
 	secret := make([]byte, 3*sha256.Size)
 	if _, err := io.ReadFull(hkdf.New(sha256.New, requestKey, nil, []byte("identity.mozilla.com/picl/v1/account/keys")), secret); err != nil {
 		return nil, err
 	}
-	return &AccountKeys{
+	return &accountKeys{
 		HMACKey: secret[0:32],
 		XORKey:  secret[32:96],
 	}, nil

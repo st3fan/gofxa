@@ -30,18 +30,18 @@ type Client struct {
 	KeyB          []byte
 }
 
-type LoginRequest struct {
+type loginRequest struct {
 	Email  string `json:"email"`
 	AuthPW string `json:"authPW"`
 }
 
-type LoginResponse struct {
+type loginResponse struct {
 	Uid           string `json:"uid"`
 	SessionToken  string `json:"sessionToken"`
 	KeyFetchToken string `json:"keyFetchToken"`
 }
 
-type KeysResponse struct {
+type keysResponse struct {
 	Bundle string `json:"bundle"`
 }
 
@@ -53,12 +53,12 @@ type DSAPublicKey struct {
 	G         string `json:"g"`
 }
 
-type SignCertificateRequest struct {
+type signCertificateRequest struct {
 	PublicKey DSAPublicKey `json:"publicKey"`
 	Duration  uint64       `json:"duration"`
 }
 
-type SignCertificateResponse struct {
+type signCertificateResponse struct {
 	Certificate string `json:"cert"`
 }
 
@@ -82,11 +82,11 @@ func NewClient(email, password string) (*Client, error) {
 }
 
 func (c *Client) Login() error {
-	loginRequest := LoginRequest{
+	request := loginRequest{
 		Email:  c.email,
 		AuthPW: hex.EncodeToString(c.authPW),
 	}
-	encodedLoginRequest, err := json.Marshal(loginRequest)
+	encodedRequest, err := json.Marshal(request)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (c *Client) Login() error {
 		return err
 	}
 
-	res, err := http.Post(u.String(), "application/json", bytes.NewBuffer(encodedLoginRequest))
+	res, err := http.Post(u.String(), "application/json", bytes.NewBuffer(encodedRequest))
 	if err != nil {
 		return err
 	}
@@ -111,14 +111,14 @@ func (c *Client) Login() error {
 		return errors.New(res.Status) // TODO: Proper errors based on what the server returns
 	}
 
-	loginResponse := &LoginResponse{}
-	if err = json.Unmarshal(body, loginResponse); err != nil {
+	response := &loginResponse{}
+	if err = json.Unmarshal(body, response); err != nil {
 		return err
 	}
 
-	c.uid = loginResponse.Uid
-	c.sessionToken, _ = hex.DecodeString(loginResponse.SessionToken)
-	c.keyFetchToken, _ = hex.DecodeString(loginResponse.KeyFetchToken)
+	c.uid = response.Uid
+	c.sessionToken, _ = hex.DecodeString(response.SessionToken)
+	c.keyFetchToken, _ = hex.DecodeString(response.KeyFetchToken)
 
 	return nil
 }
@@ -136,7 +136,7 @@ func (c *Client) FetchKeys() error {
 		return err
 	}
 
-	requestCredentials, err := NewRequestCredentials(c.keyFetchToken, "keyFetchToken")
+	requestCredentials, err := newRequestCredentials(c.keyFetchToken, "keyFetchToken")
 	if err != nil {
 		return err
 	}
@@ -161,19 +161,19 @@ func (c *Client) FetchKeys() error {
 		return errors.New(res.Status) // TODO: Proper errors based on what the server returns
 	}
 
-	keysResponse := &KeysResponse{}
-	if err = json.Unmarshal(body, keysResponse); err != nil {
+	response := &keysResponse{}
+	if err = json.Unmarshal(body, response); err != nil {
 		return err
 	}
 
-	accountKeys, err := NewAccountKeys(requestCredentials.RequestKey)
+	accountKeys, err := newAccountKeys(requestCredentials.RequestKey)
 	if err != nil {
 		return err
 	}
 
 	//
 
-	bundle, err := hex.DecodeString(keysResponse.Bundle)
+	bundle, err := hex.DecodeString(response.Bundle)
 	if err != nil {
 		return err
 	}
@@ -214,7 +214,7 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 		return "", err
 	}
 
-	signRequest := SignCertificateRequest{
+	request := signCertificateRequest{
 		PublicKey: DSAPublicKey{
 			Algorithm: "DS",
 			Y:         fmt.Sprintf("%x", key.PublicKey.Y),
@@ -224,26 +224,26 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 		},
 		Duration: 86400000,
 	}
-	encodedSignRequest, err := json.Marshal(signRequest)
+	encodedRequest, err := json.Marshal(request)
 	if err != nil {
 		return "", err
 	}
 
 	client := &http.Client{}
 
-	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(encodedSignRequest))
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(encodedRequest))
 	if err != nil {
 		return "", err
 	}
 	req.Header.Set("Content-Type", "application/json")
 
-	requestCredentials, err := NewRequestCredentials(c.sessionToken, "sessionToken")
+	requestCredentials, err := newRequestCredentials(c.sessionToken, "sessionToken")
 	if err != nil {
 		return "", err
 	}
 
 	hawkCredentials := newHawkCredentials(hex.EncodeToString(requestCredentials.TokenId), requestCredentials.RequestHMACKey)
-	if err := hawkCredentials.authorizeRequest(req, bytes.NewReader(encodedSignRequest), ""); err != nil {
+	if err := hawkCredentials.authorizeRequest(req, bytes.NewReader(encodedRequest), ""); err != nil {
 		return "", err
 	}
 
@@ -262,12 +262,12 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 		return "", errors.New(res.Status) // TODO: Proper errors based on what the server returns
 	}
 
-	signResponse := &SignCertificateResponse{}
-	if err = json.Unmarshal(body, signResponse); err != nil {
+	response := &signCertificateResponse{}
+	if err = json.Unmarshal(body, response); err != nil {
 		return "", err
 	}
 
-	return signResponse.Certificate, nil
+	return response.Certificate, nil
 }
 
 func (c *Client) String() string {
