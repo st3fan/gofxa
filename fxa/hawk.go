@@ -39,18 +39,36 @@ func portForURL(u *url.URL) (int, error) {
 	}
 }
 
+func hostForURL(u *url.URL) (string, error) {
+	if strings.LastIndex(u.Host, ":") == -1 {
+		return u.Host, nil
+	} else {
+		host, _, err := net.SplitHostPort(u.Host)
+		if err != nil {
+			return "", err
+		}
+		return host, nil
+	}
+}
+
 func hawkSignature(req *http.Request, payloadHash string, key []byte, ts time.Time, nonce string, ext string) (string, error) {
 	port, err := portForURL(req.URL)
 	if err != nil {
 		return "", err
 	}
+
+	host, err := hostForURL(req.URL)
+	if err != nil {
+		return "", err
+	}
+
 	mac := hmac.New(sha256.New, key)
 	io.WriteString(mac, "hawk.1.header\n")
 	io.WriteString(mac, strconv.FormatInt(ts.Unix(), 10)+"\n")
 	io.WriteString(mac, nonce+"\n")
 	io.WriteString(mac, req.Method+"\n")
 	io.WriteString(mac, req.URL.RequestURI()+"\n")
-	io.WriteString(mac, req.URL.Host+"\n") // TODO: Breaks with custom ports
+	io.WriteString(mac, host+"\n")
 	io.WriteString(mac, strconv.Itoa(port)+"\n")
 	io.WriteString(mac, payloadHash+"\n")
 	io.WriteString(mac, ext+"\n")
