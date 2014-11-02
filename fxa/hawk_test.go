@@ -66,10 +66,10 @@ func Test_hawkSignature_POST(t *testing.T) {
 	}
 }
 
-func Test_AuthorizeRequest_GET(t *testing.T) {
-	credentials := NewHawkCredentials("dh37fgj492je", []byte("werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"))
+func Test_authorizeRequest_GET(t *testing.T) {
+	credentials := newHawkCredentials("dh37fgj492je", []byte("werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"))
 	request, _ := http.NewRequest("GET", "http://example.com:8000/resource/1?b=1&a=2", nil)
-	if err := credentials.AuthorizeRequest(request, nil, "some-app-ext-data"); err != nil {
+	if err := credentials.authorizeRequest(request, nil, "some-app-ext-data"); err != nil {
 		t.Error("AuthorizeRequest failed: ", err)
 	}
 
@@ -79,12 +79,12 @@ func Test_AuthorizeRequest_GET(t *testing.T) {
 	}
 }
 
-func Test_AuthorizeRequest_POST(t *testing.T) {
+func Test_authorizeRequest_POST(t *testing.T) {
 	body := "Thank you for flying Hawk"
 	request, _ := http.NewRequest("POST", "http://example.com:8000/resource/1?b=1&a=2", strings.NewReader(body))
 
-	credentials := NewHawkCredentials("dh37fgj492je", []byte("werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"))
-	if err := credentials.AuthorizeRequest(request, strings.NewReader(body), "some-app-ext-data"); err != nil {
+	credentials := newHawkCredentials("dh37fgj492je", []byte("werxhqb98rpaxn39848xrunpaw3489ruxnpa98w4rxn"))
+	if err := credentials.authorizeRequest(request, strings.NewReader(body), "some-app-ext-data"); err != nil {
 		t.Error("AuthorizeRequest failed: ", err)
 	}
 
