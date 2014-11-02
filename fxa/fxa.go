@@ -45,7 +45,7 @@ type keysResponse struct {
 	Bundle string `json:"bundle"`
 }
 
-type DSAPublicKey struct {
+type publicKey struct {
 	Algorithm string `json:"algorithm"`
 	Y         string `json:"y"`
 	P         string `json:"p"`
@@ -54,14 +54,15 @@ type DSAPublicKey struct {
 }
 
 type signCertificateRequest struct {
-	PublicKey DSAPublicKey `json:"publicKey"`
-	Duration  uint64       `json:"duration"`
+	PublicKey publicKey `json:"publicKey"`
+	Duration  uint64    `json:"duration"`
 }
 
 type signCertificateResponse struct {
 	Certificate string `json:"cert"`
 }
 
+// Create a new client with the specified email and password.
 func NewClient(email, password string) (*Client, error) {
 	authPW, err := deriveAuthPWFromQuickStretchedPassword(quickStretchPassword(email, password))
 	if err != nil {
@@ -215,7 +216,7 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 	}
 
 	request := signCertificateRequest{
-		PublicKey: DSAPublicKey{
+		PublicKey: publicKey{
 			Algorithm: "DS",
 			Y:         fmt.Sprintf("%x", key.PublicKey.Y),
 			P:         fmt.Sprintf("%x", key.PublicKey.Parameters.P),
