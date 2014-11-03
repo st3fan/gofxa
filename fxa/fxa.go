@@ -18,6 +18,7 @@ import (
 	"net/url"
 )
 
+// Structure that maintains the state of a Firefox Accounts Client.
 type Client struct {
 	email         string
 	password      string
@@ -26,7 +27,7 @@ type Client struct {
 	uid           string // After /account/login
 	sessionToken  []byte
 	keyFetchToken []byte
-	KeyA          []byte // After /account/keys
+	KeyA          []byte
 	KeyB          []byte
 }
 
@@ -82,6 +83,7 @@ func NewClient(email, password string) (*Client, error) {
 	}, nil
 }
 
+// Login to the Firefox Accounts service.
 func (c *Client) Login() error {
 	request := loginRequest{
 		Email:  c.email,
@@ -124,6 +126,7 @@ func (c *Client) Login() error {
 	return nil
 }
 
+// Fetch encryption keys from the Firefox Accounts service.
 func (c *Client) FetchKeys() error {
 	u, err := url.Parse("https://api.accounts.firefox.com/v1/account/keys")
 	if err != nil {
@@ -209,6 +212,7 @@ func (c *Client) FetchKeys() error {
 	return nil
 }
 
+// Sign a certificate with the given DSA key. Returns an encoded certificate.
 func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 	u, err := url.Parse("https://api.accounts.firefox.com/v1/certificate/sign")
 	if err != nil {
