@@ -31,6 +31,18 @@ type Client struct {
 	KeyB          []byte
 }
 
+type ErrorResponse struct {
+	Code    int    `json:"code"`
+	Errno   int    `json:"errno"`
+	Err     string `json:"error"`
+	Message string `json:"message"`
+	Info    string `json:"info"`
+}
+
+func (e *ErrorResponse) Error() string {
+	return e.Err
+}
+
 type loginRequest struct {
 	Email  string `json:"email"`
 	AuthPW string `json:"authPW"`
@@ -111,7 +123,12 @@ func (c *Client) Login() error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New(res.Status) // TODO: Proper errors based on what the server returns
+		errorResponse := &ErrorResponse{}
+		if err := json.Unmarshal(body, &errorResponse); err != nil {
+			return err
+		} else {
+			return errorResponse
+		}
 	}
 
 	response := &loginResponse{}
@@ -162,7 +179,12 @@ func (c *Client) FetchKeys() error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return errors.New(res.Status) // TODO: Proper errors based on what the server returns
+		errorResponse := &ErrorResponse{}
+		if err := json.Unmarshal(body, &errorResponse); err != nil {
+			return err
+		} else {
+			return errorResponse
+		}
 	}
 
 	response := &keysResponse{}
@@ -264,7 +286,12 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		return "", errors.New(res.Status) // TODO: Proper errors based on what the server returns
+		errorResponse := &ErrorResponse{}
+		if err := json.Unmarshal(body, &errorResponse); err != nil {
+			return "", err
+		} else {
+			return "", errorResponse
+		}
 	}
 
 	response := &signCertificateResponse{}

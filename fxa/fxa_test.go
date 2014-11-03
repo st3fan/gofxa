@@ -7,6 +7,7 @@ package fxa
 import (
 	"crypto/dsa"
 	"crypto/rand"
+	"log"
 	"testing"
 )
 
@@ -51,5 +52,32 @@ func Test_Login(t *testing.T) {
 
 	if _, err := client.SignCertificate(key); err != nil {
 		t.Error("Cannot login: ", err)
+	}
+}
+
+func Test_BadLogin(t *testing.T) {
+	client, err := NewClient("gofxa@sateh.com", "wrongpassword")
+	if client == nil || err != nil {
+		t.Error("Cannot create client: ", err)
+	}
+
+	err = client.Login()
+	if err == nil {
+		t.Error("Expected an error")
+	}
+
+	log.Printf("GOT %#v\n", err)
+
+	errorResponse, ok := err.(*ErrorResponse)
+	if !ok {
+		t.Errorf("Expected an fxa.ErrorResponse. Got %#v", err)
+	}
+
+	if errorResponse.Code != 400 || errorResponse.Errno != 103 {
+		t.Error("Unexpected error received")
+	}
+
+	if errorResponse.Message == "" || errorResponse.Info == "" || errorResponse.Err == "" {
+		t.Error("Incomplete error received")
 	}
 }
