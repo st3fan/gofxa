@@ -162,8 +162,8 @@ func (c *Client) FetchKeys() error {
 		return err
 	}
 
-	hawkCredentials := newHawkCredentials(hex.EncodeToString(requestCredentials.TokenId), requestCredentials.RequestHMACKey)
-	if err := hawkCredentials.authorizeRequest(req, nil, ""); err != nil {
+	hawkCredentials := NewHawkCredentials(hex.EncodeToString(requestCredentials.TokenId), requestCredentials.RequestHMACKey)
+	if err := hawkCredentials.AuthorizeRequest(req, nil, ""); err != nil {
 		return err
 	}
 
@@ -269,8 +269,8 @@ func (c *Client) SignCertificate(key *dsa.PrivateKey) (string, error) {
 		return "", err
 	}
 
-	hawkCredentials := newHawkCredentials(hex.EncodeToString(requestCredentials.TokenId), requestCredentials.RequestHMACKey)
-	if err := hawkCredentials.authorizeRequest(req, bytes.NewReader(encodedRequest), ""); err != nil {
+	hawkCredentials := NewHawkCredentials(hex.EncodeToString(requestCredentials.TokenId), requestCredentials.RequestHMACKey)
+	if err := hawkCredentials.AuthorizeRequest(req, bytes.NewReader(encodedRequest), ""); err != nil {
 		return "", err
 	}
 

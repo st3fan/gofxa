@@ -87,11 +87,11 @@ func hawkPayloadHash(req *http.Request, payload io.Reader) (string, error) {
 	return base64.StdEncoding.EncodeToString(hash.Sum(nil)), nil
 }
 
-func newHawkCredentials(id string, key []byte) hawkCredentials {
+func NewHawkCredentials(id string, key []byte) hawkCredentials {
 	return hawkCredentials{id: id, key: key}
 }
 
-func (hc *hawkCredentials) authorizeRequest(req *http.Request, body io.Reader, ext string) error {
+func (hc *hawkCredentials) AuthorizeRequest(req *http.Request, body io.Reader, ext string) error {
 	payloadHash, err := hawkPayloadHash(req, body)
 	if err != nil {
 		return err
