@@ -5,8 +5,8 @@
 package fxa
 
 import (
-	"code.google.com/p/go.crypto/hkdf"
-	"code.google.com/p/go.crypto/pbkdf2"
+	"golang.org/x/crypto/hkdf"
+	"golang.org/x/crypto/pbkdf2"
 	"crypto/sha256"
 	"io"
 )
