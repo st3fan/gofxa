@@ -46,6 +46,7 @@ func (e *ErrorResponse) Error() string {
 type loginRequest struct {
 	Email  string `json:"email"`
 	AuthPW string `json:"authPW"`
+	Reason string `json:"reason"`
 }
 
 type loginResponse struct {
@@ -100,6 +101,7 @@ func (c *Client) Login() error {
 	request := loginRequest{
 		Email:  c.email,
 		AuthPW: hex.EncodeToString(c.authPW),
+		Reason: "login",
 	}
 	encodedRequest, err := json.Marshal(request)
 	if err != nil {
@@ -111,7 +113,11 @@ func (c *Client) Login() error {
 		return err
 	}
 
-	res, err := http.Post(u.String(), "application/json", bytes.NewBuffer(encodedRequest))
+	req, err := http.NewRequest(http.MethodPost, u.String(), bytes.NewBuffer(encodedRequest))
+	if err != nil {
+		return err
+	}
+	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return err
 	}
